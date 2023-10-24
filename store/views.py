@@ -3,12 +3,14 @@ from django.db.models.aggregates import Count
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.decorators import action 
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import status
 from .filters import ProductFilter
-from .models import Collection, Product, Review
-from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer
+from .models import Collection, Product, Review, Customer
+from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer, Customerserializer
 
 
 class ProductViewSet(ModelViewSet):
@@ -52,3 +54,19 @@ class ReviewViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {'product_id': self.kwargs['product_pk']}
+    
+class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
+    queryset = Customer.objects.all()
+    serializer_class = Customerserializer
+
+    @action(detail=False, methods=['GET', 'PUT']) # true or false here dictates if the action is on the list or detail view. False puts it on the list view
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id) # get_or_create returns a tuple with customer object and boolean that tells us if the customer was created or retrived
+        if request.method == 'GET':
+            serializer = Customerserializer(customer)
+            return Response(serializer.data)
+        elif request.method == 'PUT':
+            serializer = Customerserializer(customer, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
