@@ -12,7 +12,7 @@ from rest_framework import status
 from .filters import ProductFilter
 from .models import Collection, Product, Review, Customer
 from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer, Customerserializer
-from .permissions import IsAdminOrReadOnly, FullDjangoModelPermissions
+from .permissions import IsAdminOrReadOnly, FullDjangoModelPermissions, ViewCustomerHistoryPermission
 
 
 class ProductViewSet(ModelViewSet):
@@ -63,6 +63,11 @@ class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Ge
     queryset = Customer.objects.all()
     serializer_class = Customerserializer
     permission_classes = [IsAdminUser] # [FullDjangoModelPermissions] custom permissions defined in permissions.py
+
+    @action(detail=True, permission_classes=[ViewCustomerHistoryPermission])
+    def history(self, request, pk):
+        return Response('ok')
+
 
 
     @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsAuthenticated]) # true or false here dictates if the action is on the list or detail view. False puts it on the list view
