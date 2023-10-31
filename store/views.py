@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework import status
 from .filters import ProductFilter
-from .models import Collection, Product, Review, Customer
-from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer, Customerserializer
+from .models import Collection, Product, Review, Customer, Order
+from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer, Customerserializer, OrderSerializer, CreateOrderSerializer
 from .permissions import IsAdminOrReadOnly, FullDjangoModelPermissions, ViewCustomerHistoryPermission
 
 
@@ -81,3 +81,14 @@ class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Ge
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
+class OrderViewSet(ModelViewSet):
+    queryset = Order.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateOrderSerializer
+        return OrderSerializer
+
+    def get_serializer_context(self):
+        return {'user_id': self.request.user.id}
